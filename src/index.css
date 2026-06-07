@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #f6f1e6;
+  color: #22302c;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(19, 86, 79, 0.16);
+}
+
+/* ── The almanac ground ──────────────────────────────────────────────────────
+   A field-guide's open page: warm bone paper, a low dawn glow at the horizon,
+   a faint paper grain, and the ghost of topographic contour lines — the land
+   you haven't walked yet. Fixed, so the whole guide rests on one sheet. */
+.almanac-ground {
+  position: relative;
+  background-color: #f6f1e6;
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, rgba(234, 177, 79, 0.14), transparent 60%),
+    radial-gradient(120% 120% at 12% 8%, rgba(255, 252, 244, 0.9), transparent 55%),
+    radial-gradient(130% 130% at 88% 104%, rgba(19, 86, 79, 0.05), transparent 55%),
+    linear-gradient(180deg, #f8f3ea 0%, #f4efe2 48%, #efe6d4 100%);
+}
+/* paper fibre grain via fractal noise */
+.almanac-ground::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.13'/%3E%3C/svg%3E");
+}
+/* faint topographic contour rings, low in the corner like a survey map */
+.almanac-ground::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.05;
+  background-image: repeating-radial-gradient(
+    circle at 86% 96%,
+    rgba(34, 48, 44, 0.55) 0,
+    rgba(34, 48, 44, 0.55) 1px,
+    transparent 1px,
+    transparent 26px
+  );
+}
+
+/* A subtler paper fill for cards / panels — a leaf of the same stock. */
+.paper-fill {
+  background-color: #f1e9d8;
+  background-image:
+    radial-gradient(140% 120% at 0% 0%, rgba(255, 253, 247, 0.7), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+}
+
+/* The case card — a heavier ivory leaf, faintly woven. */
+.case-fill {
+  background-color: #fcf8ef;
+  background-image:
+    radial-gradient(130% 110% at 0% 0%, rgba(255, 254, 250, 0.85), transparent 62%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* Pine-foil wordmark shimmer. */
+.foil {
+  background: linear-gradient(96deg, #0d3d38 0%, #2c857a 26%, #13564f 50%, #3f9d90 72%, #0d3d38 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Marigold-foil for fine flourishes. */
+.sun-foil {
+  background: linear-gradient(96deg, #9c651d 0%, #eab14f 30%, #c9842b 52%, #f3c878 70%, #9c651d 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A drawn horizon rule — thin pine line that can animate in. */
+.horizon-rule {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(19, 86, 79, 0.5) 12%, rgba(19, 86, 79, 0.5) 88%, transparent);
+  transform-origin: left center;
+}
+
+/* A fine dotted trail rule. */
+.trail-rule {
+  height: 0;
+  border-top: 1.5px dashed rgba(19, 86, 79, 0.3);
+}
+
+/* The pull-quote bar in the margin of a case. */
+.quote-bar {
+  background: linear-gradient(180deg, #2c857a, #13564f);
+}
+
+/* Editorial drop-cap for the opening of a case. */
+.dropcap::first-letter {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 600;
+  font-size: 3.4em;
+  line-height: 0.8;
+  float: left;
+  margin: 0.06em 0.09em -0.04em 0;
+  color: #cf5a33;
+}
+
+/* Long-form case prose — generous, magazine-set. */
+.case-prose p {
+  margin: 0 0 0.95em;
+}
+.case-prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Custom range slider (a surveyor's dial). */
+.dial {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #13564f var(--fill, 50%), #d8c8a8 var(--fill, 50%));
+  outline: none;
+}
+.dial::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fcf8ef;
+  border: 2px solid #13564f;
+  box-shadow: 0 2px 8px -2px rgba(34, 48, 44, 0.5);
+  cursor: pointer;
+  margin-top: -1px;
+}
+.dial::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fcf8ef;
+  border: 2px solid #13564f;
+  box-shadow: 0 2px 8px -2px rgba(34, 48, 44, 0.5);
+  cursor: pointer;
+}
+
+/* Hide scrollbars on horizontal rails while keeping scroll. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Focus ring in the brand accent. */
+.ring-pine:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #f6f1e6, 0 0 0 4px rgba(19, 86, 79, 0.6);
+}
+
+textarea,
+input,
+button,
+select {
+  font-family: inherit;
+}
