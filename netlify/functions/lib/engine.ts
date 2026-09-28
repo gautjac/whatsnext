@@ -8,6 +8,13 @@ function client(): Anthropic {
   return new Anthropic({ apiKey, baseURL: "https://api.anthropic.com" });
 }
 
+// One line per call, so the function logs show whether the prefix came from the cache.
+function logUsage(kind: string, u: Anthropic.Usage): void {
+  console.log(
+    `[whatsnext] ${kind}: input=${u.input_tokens} cache_read=${u.cache_read_input_tokens ?? 0} cache_write=${u.cache_creation_input_tokens ?? 0} output=${u.output_tokens}`,
+  );
+}
+
 /** The portrait the client sends — already rendered to human-readable labels. */
 export interface ProfileWire {
   name: string;
@@ -104,14 +111,18 @@ export async function runArgue(req: ArgueRequest): Promise<ArgueResult> {
 
   const avoidLine =
     avoid.length > 0
-      ? `\n\nDo NOT propose any of these again (already seen): ${avoid.join(", ")}. Bring fresh ones.`
+      ? `Do NOT propose any of these again (already seen): ${avoid.join(", ")}. Bring fresh ones.\n\n`
       : "";
 
   const pushLine = pushback
-    ? `\n\nThe person pushed back on an earlier set: "${pushback}". Take it fully to heart and argue harder, truer.`
+    ? `The person pushed back on an earlier set: "${pushback}". Take it fully to heart and argue harder, truer.\n\n`
     : "";
 
-  const task = `Here is the person:\n\n${portraitBlock(profile)}${avoidLine}${pushLine}\n\nMake the case for EXACTLY four pursuits, each a genuine brief written for them. Let WHY NOW steer the set. Be chiselled, not wordy: each "argument" is TWO short paragraphs (≈ 90 words total); "honesty", "satisfaction" and "firstStep" are ONE sentence each; the pull-quote is one sentence; the fitNote is ≤ 8 words. Density, not length. Vary the register: at least one expected-but-right and at least one unexpected-but-right. One framing sentence (intro), then the four briefs. Respond only by calling present_cases.`;
+  // The portrait is the same on every re-argue ("more", pushback), so it leads
+  // the turn as its own block and closes the cached prefix (tool + GUIDE +
+  // portrait); what changes per call — the avoid list, the pushback — follows.
+  const person = `Here is the person:\n\n${portraitBlock(profile)}`;
+  const task = `${avoidLine}${pushLine}Make the case for EXACTLY four pursuits, each a genuine brief written for them. Let WHY NOW steer the set. Be chiselled, not wordy: each "argument" is TWO short paragraphs (≈ 90 words total); "honesty", "satisfaction" and "firstStep" are ONE sentence each; the pull-quote is one sentence; the fitNote is ≤ 8 words. Density, not length. Vary the register: at least one expected-but-right and at least one unexpected-but-right. One framing sentence (intro), then the four briefs. Respond only by calling present_cases.`;
 
   // NOTE: no minItems/maxItems on the array — those JSON-schema bounds force
   // expensive constraint-satisfaction in the model and make forced tool_use
@@ -136,11 +147,20 @@ export async function runArgue(req: ArgueRequest): Promise<ArgueResult> {
     model: MODEL,
     max_tokens: 3600,
     system: GUIDE,
-    messages: [{ role: "user", content: task }],
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: person, cache_control: { type: "ephemeral" } },
+          { type: "text", text: task },
+        ],
+      },
+    ],
     tools: [tool],
     tool_choice: { type: "tool", name: "present_cases" },
   });
   const res = await stream.finalMessage();
+  logUsage("argue", res.usage);
 
   const block = res.content.find((b) => b.type === "tool_use");
   if (!block || block.type !== "tool_use") throw new Error("No cases returned");
@@ -186,7 +206,10 @@ export async function runTryout(req: TryoutRequest): Promise<TryoutWire> {
 
   const ctx = context ? `\n\nThe case already made to this person: "${context}"` : "";
 
-  const task = `The person says "yes, I'm in" for: ${hobby}.\n\nHere is who they are:\n\n${portraitBlock(profile)}${ctx}\n\nGive them a concrete, realistic 30-day on-ramp sized to THEIR time and budget. A one-sentence promise (where they'll be in 30 days), the ONE cheap thing to buy to begin (with a price band), the very first session laid out step by step (with a duration in minutes), then four weeks of on-ramp (each a focus + 2–4 small moves), and finally a small signal that it's taking hold. Stay warm and precise. Respond only by calling lay_out_tryout.`;
+  // Portrait first, as its own cached block (tool + GUIDE + portrait), so trying
+  // out a second hobby from the same set reads it; the hobby and its case follow.
+  const person = `Here is who they are:\n\n${portraitBlock(profile)}`;
+  const task = `The person says "yes, I'm in" for: ${hobby}.${ctx}\n\nGive them a concrete, realistic 30-day on-ramp sized to THEIR time and budget. A one-sentence promise (where they'll be in 30 days), the ONE cheap thing to buy to begin (with a price band), the very first session laid out step by step (with a duration in minutes), then four weeks of on-ramp (each a focus + 2–4 small moves), and finally a small signal that it's taking hold. Stay warm and precise. Respond only by calling lay_out_tryout.`;
 
   // A FLAT schema (no nested objects beyond the one weeks[] array) — deeply
   // nested tool schemas occasionally make the model leak its own <parameter>
@@ -244,11 +267,20 @@ export async function runTryout(req: TryoutRequest): Promise<TryoutWire> {
     model: MODEL,
     max_tokens: 2600,
     system: GUIDE,
-    messages: [{ role: "user", content: task }],
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: person, cache_control: { type: "ephemeral" } },
+          { type: "text", text: task },
+        ],
+      },
+    ],
     tools: [tool],
     tool_choice: { type: "tool", name: "lay_out_tryout" },
   });
   const res = await stream.finalMessage();
+  logUsage("tryout", res.usage);
 
   const block = res.content.find((b) => b.type === "tool_use");
   if (!block || block.type !== "tool_use") throw new Error("No tryout returned");
